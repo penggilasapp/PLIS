@@ -1,0 +1,6 @@
+{
+  "name": "PLIS - Penggilas Laundry Information System",
+  "description": "Sistem Informasi Manajemen Laundry Mobile-First & PWA modern dengan pencatatan transaksi, kasir, master layanan bertingkat, nota thermal 58mm, rekap kas, dan laporan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
