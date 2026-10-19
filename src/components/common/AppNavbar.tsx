@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Database, Sparkles, UserCheck } from 'lucide-react';
+import { Bell, Database, Menu, Sparkles, UserCheck } from 'lucide-react';
 import { AppUser, BusinessSettings } from '../../types';
 import { PWAInstallButton } from './PWAInstallButton';
 import { UserSwitcherModal } from './UserSwitcherModal';
@@ -12,6 +12,7 @@ interface AppNavbarProps {
   activeTabTitle: string;
   urgentDeadlineCount?: number;
   onOpenDeadlineModal?: () => void;
+  onOpenSideMenu?: () => void;
 }
 
 export const AppNavbar: React.FC<AppNavbarProps> = ({
@@ -22,21 +23,34 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
   activeTabTitle,
   urgentDeadlineCount = 0,
   onOpenDeadlineModal,
+  onOpenSideMenu,
 }) => {
   const [showUserModal, setShowUserModal] = useState(false);
 
   return (
     <>
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-2xs">
-        <div className="max-w-4xl mx-auto px-4 py-2.5 flex items-center justify-between gap-2">
-          {/* Brand Info */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-xs shrink-0">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
+          {/* Brand Info & Clickable Side Drawer Trigger */}
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Top Icon Trigger */}
+            <button
+              type="button"
+              onClick={onOpenSideMenu}
+              className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-700 to-indigo-600 flex items-center justify-center text-white shadow-xs shrink-0 hover:shadow-md hover:scale-[1.02] active:scale-95 transition cursor-pointer relative group"
+              title="Klik gambar icon atau slide touchpad ke kanan untuk buka menu samping"
+            >
+              <Menu className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 border-2 border-white rounded-full"></span>
+            </button>
+
+            <div
+              onClick={onOpenSideMenu}
+              className="min-w-0 cursor-pointer group"
+              title="Klik atau slide touchpad ke kanan untuk membuka menu samping"
+            >
               <div className="flex items-center gap-1.5">
-                <h1 className="font-bold text-sm text-slate-900 tracking-tight truncate">
+                <h1 className="font-bold text-sm text-slate-900 tracking-tight truncate group-hover:text-blue-600 transition">
                   {settings.storeName || 'PLIS Laundry'}
                 </h1>
                 <span className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800">
@@ -44,8 +58,9 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
                   IDB
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium truncate">
-                {activeTabTitle}
+              <p className="text-[11px] text-slate-500 font-medium truncate flex items-center gap-1">
+                <span>{activeTabTitle}</span>
+                <span className="text-[10px] text-blue-600 font-bold hidden xs:inline">• Slide Menu ⫸</span>
               </p>
             </div>
           </div>

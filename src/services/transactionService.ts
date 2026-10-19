@@ -12,6 +12,7 @@ import {
   calculateDiscount,
   calculateFinalTotal,
   calculateItemSubtotal,
+  calculateOrderEstimatedDuration,
   calculatePaymentDetails,
 } from '../shared/calculations';
 
@@ -259,6 +260,11 @@ export const transactionService = {
     const remainingAmount = payDetails.remainingAmount;
     const paymentStatus = payDetails.paymentStatus;
 
+    // Recalculate estimated completion time according to updated services
+    const servicesList = await dbService.getAll<any>('services');
+    const orderEstimation = calculateOrderEstimatedDuration(sanitizedItems, servicesList);
+    const estDate = new Date(new Date(trx.createdAt).getTime() + orderEstimation.durationHours * 3600 * 1000);
+
     const updatedTrx: Transaction = {
       ...trx,
       items: sanitizedItems,
@@ -269,6 +275,7 @@ export const transactionService = {
       paymentStatus,
       specialNotes,
       perfumePreference,
+      estimatedCompletionAt: estDate.toISOString(),
     };
 
     await dbService.put('transactions', updatedTrx);

@@ -4,9 +4,11 @@ import {
   calculateDiscount,
   calculateFinalTotal,
   calculateItemSubtotal,
+  calculateOrderEstimatedDuration,
   calculatePaymentDetails,
   calculateQuickDP,
   calculateSubtotal,
+  calculateTargetCompletionDate,
   validateInitialPayment,
 } from '../shared/calculations';
 
@@ -156,6 +158,63 @@ describe('Transaction Calculations Test Suite', () => {
       expect(result.remainingAmount).toBe(0);
       expect(result.isFullyPaid).toBe(true);
       expect(result.paymentStatus).toBe('LUNAS');
+    });
+  });
+
+  describe('Order Estimation Logic (Automatic from Master Layanan)', () => {
+    const mockServices = [
+      { id: 'SRV-EXP-4', name: 'Cuci Express 4 Jam', estimatedDurationHours: 4 },
+      { id: 'SRV-KILAT-24', name: 'Cuci Kilat 1 Hari', estimatedDurationHours: 24 },
+      { id: 'SRV-REG-48', name: 'Cuci Reguler 2 Hari', estimatedDurationHours: 48 },
+      { id: 'SRV-BEDCOVER-72', name: 'Cuci Bedcover 3 Hari', estimatedDurationHours: 72 },
+    ];
+
+    it('returns default 24h when items list is empty', () => {
+      const result = calculateOrderEstimatedDuration([], mockServices);
+      expect(result.durationHours).toBe(24);
+      expect(result.formattedDuration).toBe('24 Jam (1 Hari)');
+    });
+
+    it('determines duration from single express service', () => {
+      const items = [{ serviceId: 'SRV-EXP-4', serviceName: 'Cuci Express 4 Jam' }];
+      const result = calculateOrderEstimatedDuration(items, mockServices);
+      expect(result.durationHours).toBe(4);
+      expect(result.longestServiceName).toBe('Cuci Express 4 Jam');
+      expect(result.formattedDuration).toBe('4 Jam');
+    });
+
+    it('determines duration from single regular service (48 Jam / 2 Hari)', () => {
+      const items = [{ serviceId: 'SRV-REG-48', serviceName: 'Cuci Reguler 2 Hari' }];
+      const result = calculateOrderEstimatedDuration(items, mockServices);
+      expect(result.durationHours).toBe(48);
+      expect(result.longestServiceName).toBe('Cuci Reguler 2 Hari');
+      expect(result.formattedDuration).toBe('48 Jam (2 Hari)');
+    });
+
+    it('automatically picks the longest turnaround duration when order has multiple mixed items', () => {
+      // Cart contains: Express 4h + Reguler 48h + Bedcover 72h
+      // Order completion must wait for Bedcover 72h!
+      const items = [
+        { serviceId: 'SRV-EXP-4', serviceName: 'Cuci Express 4 Jam' },
+        { serviceId: 'SRV-REG-48', serviceName: 'Cuci Reguler 2 Hari' },
+        { serviceId: 'SRV-BEDCOVER-72', serviceName: 'Cuci Bedcover 3 Hari' },
+      ];
+      const result = calculateOrderEstimatedDuration(items, mockServices);
+      expect(result.durationHours).toBe(72);
+      expect(result.longestServiceName).toBe('Cuci Bedcover 3 Hari');
+      expect(result.formattedDuration).toBe('72 Jam (3 Hari)');
+    });
+
+    it('calculates target completion Date accurately from start time', () => {
+      const baseDate = new Date('2026-10-19T10:00:00.000Z');
+      const target4h = calculateTargetCompletionDate(4, baseDate);
+      expect(target4h.toISOString()).toBe('2026-10-19T14:00:00.000Z');
+
+      const target24h = calculateTargetCompletionDate(24, baseDate);
+      expect(target24h.toISOString()).toBe('2026-10-20T10:00:00.000Z');
+
+      const target48h = calculateTargetCompletionDate(48, baseDate);
+      expect(target48h.toISOString()).toBe('2026-10-21T10:00:00.000Z');
     });
   });
 });

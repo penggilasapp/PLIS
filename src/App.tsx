@@ -25,6 +25,8 @@ import { AppNavbar } from './components/common/AppNavbar';
 import { BottomNav, MainTab } from './components/common/BottomNav';
 import { DeadlineNotificationModal } from './components/common/DeadlineNotificationModal';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
+import { SideDrawerMenu, DrawerMenuDestination } from './components/common/SideDrawerMenu';
+import { UserSwitcherModal } from './components/common/UserSwitcherModal';
 import { getUrgentDeadlineTransactions } from './shared/deadline';
 
 // Modules
@@ -55,6 +57,11 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<MainTab>('dashboard');
   const [activeSubView, setActiveSubView] = useState<SubMenuType | null>(null);
   const [isCreatingTransaction, setIsCreatingTransaction] = useState(false);
+
+  // Side Drawer & Tab states
+  const [showSideDrawer, setShowSideDrawer] = useState(false);
+  const [showUserSwitcherModal, setShowUserSwitcherModal] = useState(false);
+  const [serviceMasterTab, setServiceMasterTab] = useState<'services' | 'units'>('services');
 
   // Selected Detail & Receipt Modal
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -192,13 +199,17 @@ export default function App() {
         case 'piutang':
           return 'Buku Piutang';
         case 'master-layanan':
-          return 'Master Layanan';
+          return serviceMasterTab === 'units' ? 'Master Satuan (Edit)' : 'Master Layanan (Edit)';
+        case 'master-satuan':
+          return 'Master Satuan (Edit)';
+        case 'master-print':
+          return 'Master Print Out';
         case 'backup-restore':
           return 'Backup & Restore';
         case 'pengguna':
           return 'Manajemen Pengguna';
         case 'pengaturan':
-          return 'Pengaturan Usaha';
+          return 'Pengaturan Usaha & Print Out';
         case 'audit':
           return 'Audit Aktivitas';
         case 'ekspor':
@@ -210,12 +221,40 @@ export default function App() {
     return 'PLIS Laundry';
   };
 
+  // Handler for navigation from Side Drawer
+  const handleDrawerNavigate = (dest: DrawerMenuDestination) => {
+    setShowSideDrawer(false);
+    setIsCreatingTransaction(false);
+
+    if (dest === 'profile') {
+      setActiveTab('lainnya');
+      setActiveSubView('pengguna');
+    } else if (dest === 'status-cucian') {
+      setActiveTab('lainnya');
+      setActiveSubView('status-cucian');
+    } else if (dest === 'master-layanan') {
+      setServiceMasterTab('services');
+      setActiveTab('lainnya');
+      setActiveSubView('master-layanan');
+    } else if (dest === 'master-satuan') {
+      setServiceMasterTab('units');
+      setActiveTab('lainnya');
+      setActiveSubView('master-layanan');
+    } else if (dest === 'master-print') {
+      setActiveTab('lainnya');
+      setActiveSubView('pengaturan');
+    } else if (dest === 'bluetooth') {
+      setActiveTab('lainnya');
+      setActiveSubView('bluetooth');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-900 font-sans flex flex-col antialiased">
       {/* Offline Connectivity Bar */}
       <OfflineIndicator />
 
-      {/* Top Application Bar with Deadline Notification Bell */}
+      {/* Top Application Bar with Deadline Notification Bell & Side Drawer Trigger */}
       <AppNavbar
         settings={settings}
         currentUser={currentUser}
@@ -224,6 +263,7 @@ export default function App() {
         activeTabTitle={getNavbarTitle()}
         urgentDeadlineCount={urgentTransactions.length}
         onOpenDeadlineModal={() => setShowDeadlineModal(true)}
+        onOpenSideMenu={() => setShowSideDrawer(true)}
       />
 
       {/* Main View Area (Max width optimized for Android mobile & tablet) */}
@@ -319,6 +359,7 @@ export default function App() {
                 currentUser={currentUser}
                 inProcessCount={activeOrdersCount}
                 unpaidCount={unpaidCount}
+                onOpenSideMenu={() => setShowSideDrawer(true)}
               />
             ) : activeSubView === 'status-cucian' ? (
               <LaundryStatusBoardView
@@ -342,6 +383,7 @@ export default function App() {
                 units={units}
                 currentUser={currentUser}
                 onRefreshData={reloadData}
+                initialTab={serviceMasterTab}
               />
             ) : activeSubView === 'bluetooth' ? (
               <BluetoothPrinterView settings={settings} />
@@ -400,6 +442,30 @@ export default function App() {
           activeOrderCount={activeOrdersCount}
         />
       )}
+
+      {/* Side Drawer Menu (Muncul Dari Kiri saat klik gambar icon atas / slide touchpad ke kanan) */}
+      <SideDrawerMenu
+        isOpen={showSideDrawer}
+        onOpen={() => setShowSideDrawer(true)}
+        onClose={() => setShowSideDrawer(false)}
+        currentUser={currentUser}
+        settings={settings}
+        inProcessCount={activeOrdersCount}
+        onNavigate={handleDrawerNavigate}
+        onOpenSwitchUser={() => {
+          setShowSideDrawer(false);
+          setShowUserSwitcherModal(true);
+        }}
+      />
+
+      {/* Global User Switcher Modal (PIN) */}
+      <UserSwitcherModal
+        isOpen={showUserSwitcherModal}
+        onClose={() => setShowUserSwitcherModal(false)}
+        users={users}
+        currentUser={currentUser}
+        onSwitchUser={(u) => setCurrentUser(u)}
+      />
 
       {/* Transaction Detail Modal */}
       <TransactionDetailModal

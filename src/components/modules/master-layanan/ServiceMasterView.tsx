@@ -30,6 +30,7 @@ interface ServiceMasterViewProps {
   units: UnitMaster[];
   currentUser: AppUser;
   onRefreshData: () => void;
+  initialTab?: 'services' | 'units';
 }
 
 export const ServiceMasterView: React.FC<ServiceMasterViewProps> = ({
@@ -39,9 +40,16 @@ export const ServiceMasterView: React.FC<ServiceMasterViewProps> = ({
   units,
   currentUser,
   onRefreshData,
+  initialTab = 'services',
 }) => {
   // Navigation tab: 'services' | 'units'
-  const [activeTab, setActiveTab] = useState<'services' | 'units'>('services');
+  const [activeTab, setActiveTab] = useState<'services' | 'units'>(initialTab);
+
+  React.useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Service filter
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('ALL');

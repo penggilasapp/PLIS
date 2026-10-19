@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Calendar,
   Check,
+  Clock,
   DollarSign,
   Package,
   Plus,
@@ -12,7 +13,8 @@ import {
   X,
 } from 'lucide-react';
 import { LAUNDRY_STATUS_FLOW, PERFUME_OPTIONS } from '../../../shared/constants';
-import { formatCurrency, getLaundryStatusDetails } from '../../../shared/formatters';
+import { formatCurrency, formatDate, getLaundryStatusDetails } from '../../../shared/formatters';
+import { calculateOrderEstimatedDuration } from '../../../shared/calculations';
 import {
   AppUser,
   LaundryService,
@@ -44,7 +46,6 @@ export const TransactionEditModal: React.FC<TransactionEditModalProps> = ({
   const [status, setStatus] = useState<LaundryStatus>('DIPROSES');
   const [perfume, setPerfume] = useState('Ocean Fresh');
   const [specialNotes, setSpecialNotes] = useState('');
-  const [estimatedDate, setEstimatedDate] = useState('');
   const [editReason, setEditReason] = useState('');
 
   // Add Item inline selector
@@ -61,7 +62,6 @@ export const TransactionEditModal: React.FC<TransactionEditModalProps> = ({
       setStatus(transaction.laundryStatus);
       setPerfume(transaction.perfumePreference || 'Ocean Fresh');
       setSpecialNotes(transaction.specialNotes || '');
-      setEstimatedDate(transaction.estimatedCompletionAt ? transaction.estimatedCompletionAt.slice(0, 16) : '');
       setEditReason('');
       setErrorMsg('');
     }
@@ -111,6 +111,7 @@ export const TransactionEditModal: React.FC<TransactionEditModalProps> = ({
   // Calculations
   const calculatedSubtotal = items.reduce((acc, it) => acc + it.subtotal, 0);
   const finalTotal = Math.max(0, calculatedSubtotal - discountNominal);
+  const orderEstimation = calculateOrderEstimatedDuration(items, services);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -296,6 +297,18 @@ export const TransactionEditModal: React.FC<TransactionEditModalProps> = ({
               >
                 + Tambah
               </button>
+            </div>
+
+            {/* Live Service Estimation Info */}
+            <div className="p-2.5 bg-blue-100/60 border border-blue-200 rounded-xl flex items-center justify-between text-xs text-blue-950">
+              <div className="flex items-center gap-2 min-w-0">
+                <Clock className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <div className="truncate">
+                  <span className="font-bold">Estimasi Otomatis Layanan:</span>{' '}
+                  <span className="font-extrabold text-blue-700">{orderEstimation.formattedDuration}</span>{' '}
+                  <span className="text-[11px] text-blue-800 opacity-90">({orderEstimation.longestServiceName})</span>
+                </div>
+              </div>
             </div>
           </div>
 

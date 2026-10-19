@@ -4,6 +4,7 @@ import {
   calculateDiscount,
   calculateFinalTotal,
   calculateItemSubtotal,
+  calculateOrderEstimatedDuration,
   calculatePaymentDetails,
   calculateQuickDP,
   calculateSubtotal,
@@ -168,5 +169,26 @@ describe('TransactionFormView User Workflow Simulations', () => {
     expect(summary.paymentDetails.enteredPayment).toBe(55000);
     expect(summary.validation.isValid).toBe(false);
     expect(summary.validation.errorMessage).toContain('tidak boleh melebihi');
+  });
+
+  it('automatically calculates turnaround estimation from selected services without manual input', () => {
+    const services = [
+      { id: 'S1', name: 'Cuci Kilat 1 Hari', estimatedDurationHours: 24 },
+      { id: 'S2', name: 'Cuci Bedcover 3 Hari', estimatedDurationHours: 72 },
+    ];
+
+    // 1. Initial order with 1 service (24h)
+    let estimation = calculateOrderEstimatedDuration([{ serviceId: 'S1' }], services);
+    expect(estimation.durationHours).toBe(24);
+    expect(estimation.longestServiceName).toBe('Cuci Kilat 1 Hari');
+
+    // 2. Add second service requiring longer turnaround (72h) - order follows the longest service
+    estimation = calculateOrderEstimatedDuration(
+      [{ serviceId: 'S1' }, { serviceId: 'S2' }],
+      services
+    );
+    expect(estimation.durationHours).toBe(72);
+    expect(estimation.longestServiceName).toBe('Cuci Bedcover 3 Hari');
+    expect(estimation.formattedDuration).toBe('72 Jam (3 Hari)');
   });
 });

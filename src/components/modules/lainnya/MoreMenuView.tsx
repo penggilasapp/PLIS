@@ -12,6 +12,7 @@ import {
   Printer,
   Settings,
   ShieldCheck,
+  Sparkles,
   Store,
   Users,
   Wallet,
@@ -26,6 +27,8 @@ export type SubMenuType =
   | 'rekap-kas'
   | 'piutang'
   | 'master-layanan'
+  | 'master-satuan'
+  | 'master-print'
   | 'backup-restore'
   | 'pengguna'
   | 'pengaturan'
@@ -53,6 +56,7 @@ interface MoreMenuViewProps {
   currentUser: AppUser;
   inProcessCount: number;
   unpaidCount: number;
+  onOpenSideMenu?: () => void;
 }
 
 export const MoreMenuView: React.FC<MoreMenuViewProps> = ({
@@ -60,20 +64,12 @@ export const MoreMenuView: React.FC<MoreMenuViewProps> = ({
   currentUser,
   inProcessCount,
   unpaidCount,
+  onOpenSideMenu,
 }) => {
   const menuGroups: MenuGroup[] = [
     {
-      groupTitle: 'Operasional Kasir & Cucian',
+      groupTitle: 'Operasional Kasir & Keuangan',
       items: [
-        {
-          id: 'status-cucian' as SubMenuType,
-          title: 'Status Cucian',
-          subtitle: 'Pipeline pengerjaan: Diterima, Diproses, Siap Diambil, Selesai',
-          icon: WashingMachine,
-          iconColor: 'bg-blue-100 text-blue-700',
-          badge: inProcessCount > 0 ? `${inProcessCount} Proses` : undefined,
-          badgeColor: 'bg-blue-500 text-white',
-        },
         {
           id: 'pengeluaran' as SubMenuType,
           title: 'Catat Pengeluaran',
@@ -96,25 +92,6 @@ export const MoreMenuView: React.FC<MoreMenuViewProps> = ({
           iconColor: 'bg-amber-100 text-amber-700',
           badge: unpaidCount > 0 ? `${unpaidCount} Nota` : undefined,
           badgeColor: 'bg-rose-500 text-white',
-        },
-      ],
-    },
-    {
-      groupTitle: 'Peralatan & Konfigurasi Produk',
-      items: [
-        {
-          id: 'bluetooth' as SubMenuType,
-          title: 'Bluetooth Thermal Printer 58 mm',
-          subtitle: 'Hubungkan printer struk mini Bluetooth via Web Bluetooth API',
-          icon: Bluetooth,
-          iconColor: 'bg-indigo-100 text-indigo-700',
-        },
-        {
-          id: 'master-layanan' as SubMenuType,
-          title: 'Master Layanan & Satuan',
-          subtitle: 'Struktur: Kategori → Klasifikasi → Layanan, master kg, pcs, m2',
-          icon: FolderTree,
-          iconColor: 'bg-cyan-100 text-cyan-700',
         },
       ],
     },
@@ -163,6 +140,30 @@ export const MoreMenuView: React.FC<MoreMenuViewProps> = ({
 
   return (
     <div className="space-y-4 pb-24">
+      {/* Relocation Notification Card */}
+      {onOpenSideMenu && (
+        <div
+          onClick={onOpenSideMenu}
+          className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 shadow-2xs flex items-center justify-between gap-3 cursor-pointer hover:bg-blue-100/50 transition active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="font-bold text-xs text-blue-900 leading-tight">
+                Menu Samping Layar Baru
+              </div>
+              <p className="text-[11px] text-blue-700 truncate mt-0.5">
+                Status Cucian, Master Layanan, Master Satuan, Print Out & Bluetooth
+              </p>
+            </div>
+          </div>
+          <button className="px-2.5 py-1 bg-blue-600 text-white rounded-lg text-[11px] font-bold shrink-0 shadow-2xs">
+            Buka Menu →
+          </button>
+        </div>
+      )}
       {menuGroups.map((grp, gIdx) => (
         <div key={gIdx} className="space-y-2">
           <h3 className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">

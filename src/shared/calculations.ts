@@ -131,3 +131,73 @@ export function validateInitialPayment(
   }
   return { isValid: true };
 }
+
+export interface OrderEstimationResult {
+  durationHours: number;
+  longestServiceName: string;
+  formattedDuration: string;
+}
+
+/**
+ * Automatically calculates order estimated turnaround time based on services in the order.
+ * Follows the longest turnaround required by the items in the order.
+ * Prevents manual arbitrary user input and ensures consistency with Master Layanan.
+ */
+export function calculateOrderEstimatedDuration(
+  items: Array<{ serviceId: string; serviceName?: string }>,
+  services: Array<{ id: string; name: string; estimatedDurationHours?: number }>
+): OrderEstimationResult {
+  if (!items || items.length === 0) {
+    return {
+      durationHours: 24,
+      longestServiceName: 'Standar Layanan',
+      formattedDuration: '24 Jam (1 Hari)',
+    };
+  }
+
+  let maxHours = 0;
+  let maxServiceName = '';
+
+  for (const it of items) {
+    const srv = services.find((s) => s.id === it.serviceId);
+    const duration = srv?.estimatedDurationHours && srv.estimatedDurationHours > 0
+      ? srv.estimatedDurationHours
+      : 24;
+
+    if (duration > maxHours) {
+      maxHours = duration;
+      maxServiceName = srv?.name || it.serviceName || 'Layanan Cucian';
+    }
+  }
+
+  if (maxHours === 0) {
+    maxHours = 24;
+    maxServiceName = 'Standar Layanan';
+  }
+
+  const days = Math.floor(maxHours / 24);
+  const remHours = maxHours % 24;
+  let formattedDuration = '';
+  if (days > 0 && remHours === 0) {
+    formattedDuration = `${maxHours} Jam (${days} Hari)`;
+  } else if (days > 0 && remHours > 0) {
+    formattedDuration = `${maxHours} Jam (${days} Hari ${remHours} Jam)`;
+  } else {
+    formattedDuration = `${maxHours} Jam`;
+  }
+
+  return {
+    durationHours: maxHours,
+    longestServiceName: maxServiceName,
+    formattedDuration,
+  };
+}
+
+/**
+ * Calculates target completion ISO string based on duration hours from start date.
+ */
+export function calculateTargetCompletionDate(durationHours: number, startDate = new Date()): Date {
+  const safeHours = Math.max(1, durationHours || 24);
+  return new Date(startDate.getTime() + safeHours * 60 * 60 * 1000);
+}
+
